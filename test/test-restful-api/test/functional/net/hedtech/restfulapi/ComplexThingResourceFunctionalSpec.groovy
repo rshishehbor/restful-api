@@ -20,8 +20,6 @@ import net.hedtech.restfulapi.spock.*
 
 import grails.converters.JSON
 
-import static org.junit.Assert.*
-import org.junit.*
 
 
 class ComplexThingResourceFunctionalSpec extends RestSpecification {

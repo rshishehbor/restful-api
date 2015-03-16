@@ -16,11 +16,11 @@
 
 grails.servlet.version          = "2.5" // Change depending on target container compliance (2.5 or 3.0)
 grails.project.work.dir         = 'target'
-grails.project.target.level     = 1.6
-grails.project.source.level     = 1.6
+grails.project.target.level     = 1.7
+grails.project.source.level     = 1.7
 
 grails.plugin.location.'restful-api' = "../.."
-
+grails.project.dependency.resolver = "ivy"
 grails.project.dependency.resolution = {
 
     inherits 'global'
@@ -36,33 +36,29 @@ grails.project.dependency.resolution = {
 
         mavenLocal()
         mavenCentral()
+        mavenRepo "http://repo.grails.org/grails/repo"
 
     }
 
     dependencies {
-        test "org.spockframework:spock-grails-support:0.7-groovy-2.0"
 
         // Dependency for CORS testing. see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6996110
         test 'org.apache.httpcomponents:httpclient:4.3.3'
     }
 
     plugins {
-        compile ':cache:1.1.6'
+        compile ':cache:1.1.8'
         compile ':inflector:0.2'
         compile ':cache-headers:1.1.7'
 
-        runtime ":hibernate:$grailsVersion"
+        runtime ":hibernate:3.6.10.10"
         runtime ":jquery:1.11.1"
         runtime ":resources:1.2.8"
         runtime ":cors:1.1.0"
 
-        test(":spock:0.7") {
-          exclude "spock-grails-support"
-        }
+        test ":funky-spock:0.2.2"
 
-        test ":funky-spock:0.2.1"
-
-        build ":tomcat:$grailsVersion"
+        build ":tomcat:7.0.52.1"
     }
 }
 
