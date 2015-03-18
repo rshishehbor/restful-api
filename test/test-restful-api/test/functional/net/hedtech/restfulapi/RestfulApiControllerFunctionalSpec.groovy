@@ -1237,7 +1237,7 @@ class RestfulApiControllerFunctionalSpec extends RestSpecification {
         }
 
         then:
-        200 == response.status
+        204 == response.status
         // assert localization of the message
         "thing resource deleted" == responseHeader('X-hedtech-message')
         0 == count
@@ -1774,7 +1774,7 @@ class RestfulApiControllerFunctionalSpec extends RestSpecification {
         'get'      | true  | 200    | null
         'post'     | false | 201    | "{code:'ZZ',description:'ZZ thing'}"
         'put'      | true  | 200    | "{description:'changed',version:'0'}"
-        'delete'   | true  | 200    | null
+        'delete'   | true  | 204    | null
     }
 
     def "Test supplemental data from declarative marshalling"() {
@@ -2061,6 +2061,69 @@ class RestfulApiControllerFunctionalSpec extends RestSpecification {
 
         then:
         200 == response.status
+    }
+
+    @Unroll
+    def "Test CollectionOfThings #method"(def method, def statusCode, def data) {
+        setup:
+        def url = localBase + "/api/collection-of-things" + (method == "post" ? "" : "/1")
+        if( method != "post" ) {
+            def azId = createThing("AZ")
+            def aaId = createThing("AY")
+            def input = JSON.parse(data)
+            input.elements[0].resource.id = azId
+            input.elements[0].resource.version = Thing.get(azId)?.version?.toString()
+            if( method != "delete" ) {
+                input.elements[1].resource.id = aaId
+                input.elements[1].resource.version = Thing.get(aaId)?.version?.toString()
+            }
+            data = input as JSON
+        }
+
+        when:
+        "$method"(url) {
+            accept('application/json')
+            contentType('application/json')
+            body {
+                "${data}"
+            }
+        }
+
+        then:
+        statusCode == response.status
+        def json =  JSON.parse(response.text)
+        json.elements[0].status == "Success"
+        json.elements[1].status == "Failed"
+
+        where:
+        method   | statusCode | data
+        "post"   | 201        | "{elements:[{index:'1',resource:{code:'AZ',description:'AZ thing'}},{index:'2',resource:{code:'AYE',description:'AY thing'}}]}"
+        "put"    | 200        | "{elements:[{index:'1',resource:{id:100,version:1,code:'AZ',description:'Updated AZ thing'}},{index:'2',resource:{id:101,version:1,code:'AYE',description:'Updated AY thing'}}]}"
+        "delete" | 200        | "{elements:[{index:'1',resource:{id:100,code:'AZ',description:'Updated AZ thing'}},{index:'2',resource:{id:101,code:'AX',description:'Updated AY thing'}}]}"
+
+    }
+
+    @Unroll
+    def "Test CollectionOfThings collection errors #method"(def method, def statusCode, def data) {
+        setup:
+        def url = localBase + "/api/collection-of-things" + (method == "post" ? "" : "/1")
+
+        when:
+        "$method"(url) {
+            accept('application/json')
+            contentType('application/json')
+            body {
+                "${data}"
+            }
+        }
+
+        then:
+        statusCode == response.status
+
+        where:
+        method | statusCode | data
+        "post" | 400        | "{elements:[{resource:{code:'AZ',description:'AZ thing'}},{index:'2',resource:{code:'AYE',description:'AY thing'}}]}"
+        "post" | 400        | "{elements:{resource:{code:'AZ',description:'AZ thing'}}}"
     }
 
     @Ignore // This test requires configuration on the test machine.

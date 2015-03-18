@@ -35,6 +35,6 @@ interface RestfulServiceAdapter {
 
     def update(def service, Map content, Map params) throws Throwable
 
-    void delete(def service, Map content, Map params) throws Throwable
+    def delete(def service, Map content, Map params) throws Throwable
 
 }

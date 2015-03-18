@@ -375,6 +375,8 @@ class RestfulApiController {
     //
     public def delete() {
         log.trace "delete() invoked for ${params.pluralizedResourceName}/${params.id} - request_id=${request.request_id}"
+        def result
+
         try {
             checkMethod( Methods.DELETE )
             def content = [:]
@@ -383,9 +385,17 @@ class RestfulApiController {
                 content = parseRequestContent( request )
             }
             checkId(content)
-            getServiceAdapter().delete( getService(), content, params )
-            response.setStatus( 200 )
-            renderSuccessResponse( new ResponseHolder(), 'default.rest.deleted.message' )
+            result = getServiceAdapter().delete( getService(), content, params )
+            def responseHolder
+            if( result ) {
+                response.setStatus(200)
+                responseHolder = new ResponseHolder(data: result)
+            }
+            else {
+                response.setStatus(204)
+                responseHolder = new ResponseHolder()
+            }
+            renderSuccessResponse(responseHolder, 'default.rest.deleted.message')
         }
         catch (e) {
             logMessageError(e)

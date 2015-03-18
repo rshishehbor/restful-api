@@ -196,7 +196,7 @@ class RestfulApiControllerSpec extends Specification {
         controller.delete()
 
         then:
-        200 == response.status
+        204 == response.status
           0 == response.getContentLength()
           1 * mock.delete(_,_) >> {}
     }
@@ -342,6 +342,7 @@ class RestfulApiControllerSpec extends Specification {
         'show'           | 'GET'      | '1'  | 'show'        | [foo:'foo']
     }
 
+    @Unroll
     def "Test that mismatch between id in url and resource representation returns 400"(def controllerMethod, def httpMethod, def id, def body) {
         setup:
         //use default extractor for any methods with a request body
@@ -382,7 +383,8 @@ class RestfulApiControllerSpec extends Specification {
         'delete'         | 'DELETE'   | '1'  | '{id:"2"}'
     }
 
-    def "Test that mismatch between type for id in url and resource representation does not cause failure"(def controllerMethod, def httpMethod, def id, def body, def serviceMethod) {
+    @Unroll
+    def "Test that mismatch between type for id in url and resource representation does not cause failure"(def controllerMethod, def httpMethod, def id, def body, def serviceMethod, def status) {
         setup:
         //use default extractor for any methods with a request body
          config.restfulApiConfig = {
@@ -410,7 +412,7 @@ class RestfulApiControllerSpec extends Specification {
         controller."$controllerMethod"()
 
         then:
-        200 == response.status
+        status == response.status
         if (serviceMethod == 'update') {
             1 * mock."$serviceMethod"(_,_) >> { [:] }
         } else {
@@ -419,14 +421,15 @@ class RestfulApiControllerSpec extends Specification {
 
 
         where:
-        controllerMethod | httpMethod | id   | body       | serviceMethod
-        'update'         | 'PUT'      | '1'  | '{id:1}'   | 'update'
-        'delete'         | 'DELETE'   | '1'  | '{id:1}'   | 'delete'
-        'update'         | 'PUT'      | '1'  | '{id:"1"}' | 'update'
-        'delete'         | 'DELETE'   | '1'  | '{id:"1"}' | 'delete'
+        controllerMethod | httpMethod | id   | body       | serviceMethod | status
+        'update'         | 'PUT'      | '1'  | '{id:1}'   | 'update'      | 200
+        'delete'         | 'DELETE'   | '1'  | '{id:1}'   | 'delete'      | 204
+        'update'         | 'PUT'      | '1'  | '{id:"1"}' | 'update'      | 200
+        'delete'         | 'DELETE'   | '1'  | '{id:"1"}' | 'delete'      | 204
     }
 
-    def "Test overriding enforcement of content id matching"(def controllerMethod, def httpMethod, def id, def body, def serviceMethod) {
+    @Unroll
+    def "Test overriding enforcement of content id matching"(def controllerMethod, def httpMethod, def id, def body, def serviceMethod, def status) {
         setup:
         //use default extractor for any methods with a request body
          config.restfulApiConfig = {
@@ -454,7 +457,7 @@ class RestfulApiControllerSpec extends Specification {
         controller."$controllerMethod"()
 
         then:
-        200 == response.status
+        status == response.status
         if (serviceMethod == 'update') {
             1 * mock."$serviceMethod"(_,_) >> { [:] }
         } else {
@@ -463,11 +466,11 @@ class RestfulApiControllerSpec extends Specification {
 
 
         where:
-        controllerMethod | httpMethod | id   | body       | serviceMethod
-        'update'         | 'PUT'      | '1'  | '{id:2}'   | 'update'
-        'delete'         | 'DELETE'   | '1'  | '{id:2}'   | 'delete'
-        'update'         | 'PUT'      | '1'  | '{id:"2"}' | 'update'
-        'delete'         | 'DELETE'   | '1'  | '{id:"2"}' | 'delete'
+        controllerMethod | httpMethod | id   | body       | serviceMethod | status
+        'update'         | 'PUT'      | '1'  | '{id:2}'   | 'update'      | 200
+        'delete'         | 'DELETE'   | '1'  | '{id:2}'   | 'delete'      | 204
+        'update'         | 'PUT'      | '1'  | '{id:"2"}' | 'update'      | 200
+        'delete'         | 'DELETE'   | '1'  | '{id:"2"}' | 'delete'      | 204
     }
 
 
@@ -769,7 +772,7 @@ class RestfulApiControllerSpec extends Specification {
         controller.delete()
 
         then:
-        200 == response.status
+        204 == response.status
           0 == response.getContentLength()
           1*mock.delete([:],_) >> { }
         'default.rest.deleted.message' == response.getHeaderValue( 'X-hedtech-message' )
@@ -822,7 +825,7 @@ class RestfulApiControllerSpec extends Specification {
         'show'           | 'GET'      | '1'  | 200    | 0         | 1         | 0           | 0           | 0           | [name:'foo']
         'create'         | 'POST'     | null | 201    | 0         | 0         | 0           | 1           | 0           | [name:'foo']
         'update'         | 'PUT'      | '1'  | 200    | 0         | 0         | 1           | 0           | 0           | [name:'foo']
-        'delete'         | 'DELETE'   | '1'  | 200    | 0         | 0         | 0           | 0           | 1           | null
+        'delete'         | 'DELETE'   | '1'  | 204    | 0         | 0         | 0           | 0           | 1           | null
     }
 
     @Unroll
@@ -873,7 +876,7 @@ class RestfulApiControllerSpec extends Specification {
         'show'           | 'GET'      | '1'  | 200    | [name:'foo']  | 'X-Request-ID'     | '123-SHOW-9'
         'create'         | 'POST'     | null | 201    | [name:'foo']  | 'X-Request-ID'     | '123-CREATE-789'
         'update'         | 'PUT'      | '1'  | 200    | [name:'foo']  | 'X-Request-ID'     | '123-update-789'
-        'delete'         | 'DELETE'   | '1'  | 200    | null          | 'U-Request-ID'     | 'My-DELETE-ID'
+        'delete'         | 'DELETE'   | '1'  | 204    | null          | 'U-Request-ID'     | 'My-DELETE-ID'
     }
 
 
@@ -1734,7 +1737,7 @@ class RestfulApiControllerSpec extends Specification {
         id   | controllerMethod | httpMethod |createCount | updateCount | deleteCount | status
         null | 'create'         | 'POST'     | 1          | 0           | 0           | 201
         1    | 'update'         | 'POST'     | 0          | 1           | 0           | 200
-        1    | 'delete'         | 'DELETE'   | 0          | 0           | 1           | 200
+        1    | 'delete'         | 'DELETE'   | 0          | 0           | 1           | 204
     }
 
     @Unroll
@@ -2197,7 +2200,7 @@ class RestfulApiControllerSpec extends Specification {
             service.update(content,params)
         }
 
-        void delete(def service, Map content, Map params) throws Throwable {
+        def delete(def service, Map content, Map params) throws Throwable {
             service.delete(content,params)
         }
     }

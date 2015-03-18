@@ -83,7 +83,7 @@ class CORSSpec extends RestSpecification {
         'get'      | true  | 200    | null
         'post'     | false | 201    | "{code:'ZZ',description:'ZZ thing'}"
         'put'      | true  | 200    | "{description:'changed',version:'0'}"
-        'delete'   | true  | 200    | null
+        'delete'   | true  | 204    | null
     }
 
 

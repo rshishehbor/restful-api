@@ -551,4 +551,19 @@ restfulApiConfig = {
             jsonExtractor {}
         }
     }
+
+    resource 'collection-of-things' config {
+        bodyExtractedOnDelete = true
+        methods = ['create','update','delete']
+        representation {
+            mediaTypes = ["application/json"]
+            marshallerFramework = 'json'
+            marshallers {
+                jsonDomainMarshaller {
+                    inherits = ['jsonDomainAffordance']
+                }
+            }
+            jsonExtractor {}
+        }
+    }
 }

@@ -17,6 +17,9 @@
 package net.hedtech.restfulapi.spock
 
 import grails.test.mixin.*
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase
+import org.apache.http.client.methods.HttpUriRequest
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import spock.lang.*
 
 import org.codehaus.groovy.runtime.InvokerHelper
@@ -106,6 +109,17 @@ abstract class RestSpecification extends Specification {
         if (requestCustomizer.getRequestFactory() != null) {
             restTemplate.setRequestFactory( requestCustomizer.getRequestFactory() )
         }
+        else {
+            restTemplate.setRequestFactory( new HttpComponentsClientHttpRequestFactory() {
+                @Override
+                protected HttpUriRequest createHttpUriRequest(HttpMethod httpMethod, URI uri) {
+                    if (HttpMethod.DELETE == httpMethod) {
+                        return new HttpEntityEnclosingDeleteRequest(uri);
+                    }
+                    return super.createHttpUriRequest(httpMethod, uri);
+                }
+            })
+        }
 
         Class responseType = requestCustomizer.responseType != null ? requestCustomizer.responseType : String
 
@@ -141,5 +155,18 @@ abstract class RestSpecification extends Specification {
             utils = new RestSpecUtils(getDisplayStream())
         }
         utils
+    }
+
+    public static class HttpEntityEnclosingDeleteRequest extends HttpEntityEnclosingRequestBase {
+
+        public HttpEntityEnclosingDeleteRequest(final URI uri) {
+            super();
+            setURI(uri);
+        }
+
+        @Override
+        public String getMethod() {
+            return "DELETE";
+        }
     }
 }
